@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>정보처리기사 실기 문제은행</title>
+<meta name="theme-color" content="#1E3A6E">
+<meta name="description" content="정보처리기사 실기 자가채점 문제은행">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="기사 실기">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── 디자인 토큰 ─────────────────────────────────────────
+   시험 답안지 모티프: 차가운 갱지 + 남색 인쇄 + 빨간펜 채점 */
+:root{
+  --bg:#EDF0F4; --surface:#FFFFFF; --surface-2:#F5F7FA;
+  --ink:#131B2B; --ink-2:#5A6779; --ink-3:#8D97A6;
+  --line:#D5DCE5; --line-2:#E8ECF1;
+  --navy:#1E3A6E; --navy-soft:#E3EAF6;
+  --red:#B3261E; --red-soft:#FBE9E7;
+  --teal:#0E6F5C; --teal-soft:#E0F2ED;
+  --amber:#8A6100;
+  --shadow:0 1px 2px rgba(19,27,43,.06), 0 6px 18px rgba(19,27,43,.05);
+  --r:10px;
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --bg:#10141B; --surface:#171D26; --surface-2:#1E252F;
+    --ink:#E7EBF1; --ink-2:#98A3B4; --ink-3:#6C7788;
+    --line:#2A323E; --line-2:#222A35;
+    --navy:#8FB0EC; --navy-soft:#1C2740;
+    --red:#FF8574; --red-soft:#331D1A;
+    --teal:#5BD3B4; --teal-soft:#152C27;
+    --amber:#D9A73C;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10141B; --surface:#171D26; --surface-2:#1E252F;
+  --ink:#E7EBF1; --ink-2:#98A3B4; --ink-3:#6C7788;
+  --line:#2A323E; --line-2:#222A35;
+  --navy:#8FB0EC; --navy-soft:#1C2740;
+  --red:#FF8574; --red-soft:#331D1A;
+  --teal:#5BD3B4; --teal-soft:#152C27;
+  --amber:#D9A73C;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:15px; line-height:1.65;
+  -webkit-text-size-adjust:100%;
+}
+code,pre,.mono{font-family:"IBM Plex Mono","D2Coding",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.wrap{max-width:640px; margin:0 auto; padding:18px 16px calc(84px + env(safe-area-inset-bottom));}
+
+/* ─── 헤더 ─── */
+.top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px;}
+.title{font-size:17px; font-weight:600; letter-spacing:-.01em; margin:0;}
+.title span{color:var(--ink-3); font-weight:400;}
+.themebtn{background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:999px;
+  padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit;flex:none}
+.themebtn:hover{border-color:var(--navy);color:var(--navy)}
+
+/* ─── 카드 ─── */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--shadow); padding:18px; margin-bottom:14px;}
+
+/* ─── 진도 스트립 (답안지 마킹) ─── */
+.strip{display:flex; flex-wrap:wrap; gap:3px; max-height:74px; overflow-y:auto; padding:2px;}
+.cell{width:13px;height:13px;border-radius:2px;background:var(--line);border:none;padding:0;cursor:pointer}
+.cell[data-s="o"]{background:var(--teal)}
+.cell[data-s="x"]{background:var(--red)}
+.cell[data-cur="1"]{outline:2px solid var(--navy); outline-offset:1px}
+.striplegend{display:flex;gap:14px;font-size:12px;color:var(--ink-2);margin-top:10px;flex-wrap:wrap}
+.striplegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:baseline}
+
+/* ─── 문제 ─── */
+.qmeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;
+  font-size:12.5px;color:var(--ink-2)}
+.tag{border:1px solid var(--line);border-radius:4px;padding:1px 7px;font-size:11.5px;color:var(--ink-2)}
+.tag.t{border-color:var(--navy);color:var(--navy);background:var(--navy-soft)}
+.qbody{font-size:16px;line-height:1.75;white-space:pre-wrap;word-break:break-word;margin-bottom:14px;font-weight:500}
+pre.code{background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;
+  padding:13px 14px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0 0 14px}
+
+/* ─── 입력 ─── */
+input[type=text],textarea,select{
+  width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:11px 13px;font-family:inherit;font-size:15px;line-height:1.5}
+textarea{resize:vertical;min-height:90px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--navy);outline-offset:-1px;border-color:var(--navy)}
+label.fl{display:block;font-size:12.5px;color:var(--ink-2);margin:12px 0 5px}
+
+/* 객관식 보기 */
+.choice{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:8px;padding:11px 13px;margin-bottom:7px;font-family:inherit;font-size:15px;
+  color:var(--ink);cursor:pointer;line-height:1.5}
+.choice:hover{border-color:var(--navy)}
+.choice[aria-pressed="true"]{border-color:var(--navy);background:var(--navy-soft);font-weight:500}
+.choice[data-mark="o"]{border-color:var(--teal);background:var(--teal-soft)}
+.choice[data-mark="x"]{border-color:var(--red);background:var(--red-soft)}
+.cnum{color:var(--ink-3);margin-right:8px}
+
+/* ─── 버튼 ─── */
+.btn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:12px 18px;
+  font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;width:100%}
+:root[data-theme="dark"] .btn,:root:not([data-theme="light"]) .btn{color:#0E1420}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .btn{color:#fff}}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:none;color:var(--ink-2);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--navy);color:var(--navy);filter:none}
+.btn.sm{padding:8px 13px;font-size:13.5px;width:auto}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+
+/* 채점 (빨간펜) */
+.verdict{display:flex;gap:10px;margin-top:6px}
+.vbtn{flex:1;border-radius:8px;padding:14px;font-family:inherit;font-size:16px;font-weight:600;
+  cursor:pointer;border:1.5px solid}
+.vbtn.ok{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+.vbtn.no{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.vbtn:hover{filter:brightness(.96)}
+
+.answer{border-left:3px solid var(--red);background:var(--surface-2);border-radius:0 8px 8px 0;
+  padding:13px 15px;margin:14px 0}
+.answer dt{font-size:12px;color:var(--ink-2);margin-bottom:3px}
+.answer dd{margin:0 0 10px;font-size:15.5px;font-weight:600;white-space:pre-wrap;word-break:break-word}
+.answer dd:last-child{margin-bottom:0;font-weight:400;font-size:14.5px;color:var(--ink-2);line-height:1.7}
+.autohint{font-size:12.5px;margin-top:8px}
+.autohint.y{color:var(--teal)} .autohint.n{color:var(--red)}
+
+/* ─── 목록 ─── */
+.qitem{border-bottom:1px solid var(--line-2);padding:11px 0;display:flex;gap:11px;align-items:flex-start}
+.qitem:last-child{border-bottom:none}
+.qitem .txt{flex:1;min-width:0}
+.qitem .q{font-size:14px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qitem .a{font-size:12.5px;color:var(--ink-2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.del{background:none;border:none;color:var(--ink-3);cursor:pointer;font-size:17px;padding:0 4px;line-height:1;flex:none}
+.del:hover{color:var(--red)}
+
+/* ─── 통계 ─── */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 0;border-bottom:1px solid var(--line-2)}
+th{font-weight:500;color:var(--ink-2);font-size:12.5px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.bigstat{display:flex;gap:22px;margin-bottom:4px;flex-wrap:wrap}
+.bigstat div{flex:1;min-width:88px}
+.bigstat b{display:block;font-size:27px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.bigstat small{color:var(--ink-2);font-size:12.5px}
+
+/* ─── 하단 탭 ─── */
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+.nav button{flex:1;background:none;border:none;padding:11px 4px 12px;font-family:inherit;font-size:12px;
+  color:var(--ink-3);cursor:pointer;border-top:2px solid transparent;margin-top:-1px}
+.nav button[aria-selected="true"]{color:var(--navy);border-top-color:var(--navy);font-weight:600}
+.nav em{display:block;font-size:17px;font-style:normal;line-height:1.35}
+
+.muted{color:var(--ink-2);font-size:13.5px;line-height:1.7}
+.empty{text-align:center;padding:30px 12px;color:var(--ink-2)}
+.empty p{margin:0 0 16px;font-size:14.5px}
+details{margin-top:12px}
+summary{cursor:pointer;font-size:13px;color:var(--navy);padding:4px 0}
+details pre{background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:12px;
+  font-size:12.5px;overflow-x:auto;line-height:1.7;margin:8px 0 0}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:20;opacity:0;pointer-events:none;
+  transition:opacity .18s}
+.toast.on{opacity:.95}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 class="title">정보처리기사 실기 <span>문제은행</span></h1>
+    <button class="themebtn" id="themebtn">◐ 테마</button>
+  </div>
+  <main id="view"></main>
+</div>
+
+<nav class="nav" id="nav">
+  <button data-tab="quiz"  aria-selected="true"><em>✎</em>풀기</button>
+  <button data-tab="bank"  aria-selected="false"><em>≡</em>문제관리</button>
+  <button data-tab="stats" aria-selected="false"><em>◔</em>통계</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   1. 상태
+   ══════════════════════════════════════════════════════════ */
+let QS = [];              // 문제 배열
+let order = [];           // 이번 세션 출제 순서 (QS의 id 목록)
+let pos = 0;              // 현재 위치
+let revealed = false;     // 정답 공개 여부
+let picked = null;        // 객관식 선택
+let tab = 'quiz';
+let filter = 'all';       // all | wrong | unseen
+let shuffle = false;
+
+const TYPE_LABEL = {short:'단답형', choice:'객관식', code:'코드'};
+const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = () => 'q' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+/* ══════════════════════════════════════════════════════════
+   2. 저장소 — db 우선, 없으면 localStorage로 동작
+   ══════════════════════════════════════════════════════════ */
+const LS = 'gisa-quiz-v1';
+let db = null;
+
+function localLoad(){
+  try{ return JSON.parse(localStorage.getItem(LS) || '[]'); }catch(e){ return []; }
+}
+function localSave(){
+  try{ localStorage.setItem(LS, JSON.stringify(QS)); }catch(e){}
+}
+async function saveQ(q){                       // 한 문제 저장
+  localSave();
+  if(db){ try{ await db.doc('questions/' + q.id).set(q); }catch(e){} }
+}
+async function removeQ(id){
+  QS = QS.filter(q => q.id !== id);
+  localSave();
+  if(db){ try{ await db.doc('questions/' + id).delete(); }catch(e){} }
+}
+
+/* PWA 버전: 저장은 이 기기의 localStorage만 사용한다 (오프라인 동작) */
+async function connectDB(){ /* no-op */ }
+
+/* ══════════════════════════════════════════════════════════
+   3. 출제 순서 만들기
+   ══════════════════════════════════════════════════════════ */
+function pool(){
+  if(filter === 'wrong')  return QS.filter(q => q.stats.last === 'x');
+  if(filter === 'unseen') return QS.filter(q => !q.stats.seen);
+  return QS;
+}
+function resetOrder(keepPos){
+  const p = pool().map(q => q.id);
+  if(shuffle) for(let i=p.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [p[i],p[j]]=[p[j],p[i]]; }
+  order = p;
+  if(!keepPos || pos >= order.length) pos = 0;
+  revealed = false; picked = null;
+}
+const curQ = () => QS.find(q => q.id === order[pos]) || null;
+
+/* ══════════════════════════════════════════════════════════
+   4. 채점
+   ══════════════════════════════════════════════════════════ */
+const norm = s => String(s||'').toLowerCase().replace(/\s+/g,'').replace(/[.,;'"`()]/g,'');
+
+function grade(q, ok){
+  q.stats.seen = (q.stats.seen||0) + 1;
+  if(ok) q.stats.correct = (q.stats.correct||0)+1; else q.stats.wrong = (q.stats.wrong||0)+1;
+  q.stats.last = ok ? 'o' : 'x';
+  saveQ(q);
+  next();
+}
+function next(){
+  revealed = false; picked = null;
+  if(pos < order.length - 1) pos++; else { pos = 0; toast('한 바퀴 완료'); }
+  render();
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. 붙여넣기 파서
+   ══════════════════════════════════════════════════════════ */
+function parseBulk(text){
+  // --- 또는 === 줄로 문제를 나눔. 구분자가 없으면 빈 줄 두 개로 나눔
+  let blocks = /^\s*[-=]{3,}\s*$/m.test(text)
+    ? text.split(/^\s*[-=]{3,}\s*$/m)
+    : text.split(/\n\s*\n\s*\n/);
+  const out = [];
+
+  for(const raw of blocks){
+    const block = raw.trim();
+    if(!block) continue;
+
+    let category = '', answer = '', explain = '', code = '';
+    const choices = [], bodyLines = [];
+    let mode = 'body';                           // body | explain
+
+    // ```로 감싼 코드 블록 먼저 분리
+    const fenced = block.replace(/```[a-z]*\n([\s\S]*?)```/gi, (m, c) => { code = c.replace(/\s+$/,''); return ''; });
+
+    for(const line of fenced.split('\n')){
+      const t = line.trim();
+      if(!t){ if(mode==='explain') explain += '\n'; continue; }
+
+      let m;
+      if((m = t.match(/^(?:답|정답|A)\s*[:.)]\s*(.*)$/i)))      { answer = m[1].trim(); mode='body'; continue; }
+      if((m = t.match(/^(?:해설|설명|풀이|H)\s*[:.)]\s*(.*)$/i))) { explain = m[1].trim(); mode='explain'; continue; }
+      if((m = t.match(/^(?:분류|과목|C)\s*[:.)]\s*(.*)$/i)))     { category = m[1].trim(); mode='body'; continue; }
+      if((m = t.match(/^[①-⑩]\s*(.*)$/)) || (m = t.match(/^\(?([1-9]|10)[).]\s+(.*)$/))) {
+        choices.push((m[2] !== undefined ? m[2] : m[1]).trim()); mode='body'; continue;
+      }
+      if(mode === 'explain'){ explain += (explain?'\n':'') + t; continue; }
+      if(!bodyLines.length && (m = t.match(/^\[([^\]]+)\]\s*(.*)$/))){
+        category = m[1].trim();
+        if(m[2]) bodyLines.push(m[2].trim());
+        continue;
+      }
+      bodyLines.push(t);
+    }
+
+    const body = bodyLines.join('\n').trim();
+    if(!body) continue;
+
+    // 답이 "2" 같은 숫자이고 보기가 있으면 객관식 정답 인덱스로 처리
+    let type = 'short';
+    if(choices.length >= 2) type = 'choice';
+    else if(code) type = 'code';
+
+    out.push(mkQ({type, category, body, code, choices, answer, explain:explain.trim()}));
+  }
+  return out;
+}
+
+function mkQ(o){
+  return {
+    id: uid(),
+    type: o.type || 'short',
+    category: o.category || '미분류',
+    body: o.body || '',
+    code: o.code || '',
+    choices: o.choices || [],
+    answer: o.answer || '',
+    explain: o.explain || '',
+    stats: {seen:0, correct:0, wrong:0, last:null},
+    createdAt: Date.now()
+  };
+}
+
+/* 객관식 정답 인덱스 (0부터). 답이 숫자면 그 번호, 아니면 텍스트 일치 */
+function correctIndex(q){
+  const a = q.answer.trim();
+  const n = parseInt(a.replace(/[^\d]/g,''), 10);
+  if(!isNaN(n) && n >= 1 && n <= q.choices.length) return n - 1;
+  const i = q.choices.findIndex(c => norm(c) === norm(a));
+  return i;
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. 렌더 — 풀기
+   ══════════════════════════════════════════════════════════ */
+function viewQuiz(){
+  if(!QS.length) return emptyBank();
+  if(!order.length) return `<div class="card empty">
+      <p>이 조건에 맞는 문제가 없습니다.</p>
+      <button class="btn ghost" onclick="setFilter('all')">전체 문제로 보기</button></div>`;
+
+  const q = curQ();
+  if(!q) return '';
+  const ci = q.type === 'choice' ? correctIndex(q) : -1;
+
+  // 진도 스트립
+  const cells = order.map((id,i)=>{
+    const s = QS.find(x=>x.id===id);
+    return `<button class="cell" data-s="${s&&s.stats.last||''}" data-cur="${i===pos?1:0}"
+             title="${i+1}번" onclick="goto(${i})"></button>`;
+  }).join('');
+
+  // 문제 본문
+  let bodyHtml = `<div class="qbody">${esc(q.body)}</div>`;
+  if(q.code) bodyHtml += `<pre class="code">${esc(q.code)}</pre>`;
+
+  // 답 입력 영역
+  let input = '';
+  if(q.type === 'choice'){
+    input = q.choices.map((c,i)=>{
+      let mark = '';
+      if(revealed) mark = (i===ci) ? 'o' : (i===picked ? 'x' : '');
+      return `<button class="choice" data-mark="${mark}" aria-pressed="${picked===i}"
+               ${revealed?'disabled':''} onclick="pick(${i})">
+               <span class="cnum">${i+1}</span>${esc(c)}</button>`;
+    }).join('');
+  }else{
+    input = `<input type="text" id="myans" placeholder="답을 적어보세요"
+              ${revealed?'disabled':''} value="${esc(window.__typed||'')}"
+              onkeydown="if(event.key==='Enter')reveal()">`;
+  }
+
+  // 정답 공개 영역
+  let reveal = '';
+  if(revealed){
+    let hint = '';
+    if(q.type !== 'choice' && window.__typed){
+      const same = norm(window.__typed) === norm(q.answer);
+      hint = `<div class="autohint ${same?'y':'n'}">${same?'자동 대조: 정답과 일치':'자동 대조: 글자가 다릅니다 — 직접 판단하세요'}</div>`;
+    }
+    reveal = `
+      <dl class="answer">
+        <dt>정답</dt><dd>${esc(q.answer) || '<span style="color:var(--ink-3)">등록된 답 없음</span>'}</dd>
+        ${q.explain ? `<dt>해설</dt><dd>${esc(q.explain)}</dd>` : ''}
+      </dl>
+      ${hint}
+      <div class="verdict">
+        <button class="vbtn ok" onclick="mark(true)">맞음</button>
+        <button class="vbtn no" onclick="mark(false)">틀림</button>
+      </div>`;
+  }else{
+    reveal = `<div style="margin-top:12px"><button class="btn" onclick="reveal()">정답 확인</button></div>`;
+  }
+
+  return `
+  <div class="card">
+    <div class="strip">${cells}</div>
+    <div class="striplegend">
+      <span><i style="background:var(--teal)"></i>맞음</span>
+      <span><i style="background:var(--red)"></i>틀림</span>
+      <span><i style="background:var(--line)"></i>안 품</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="qmeta">
+      <span>${pos+1} / ${order.length}</span>
+      <span><span class="tag">${esc(q.category)}</span> <span class="tag t">${TYPE_LABEL[q.type]}</span></span>
+    </div>
+    ${bodyHtml}
+    ${input}
+    ${reveal}
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn ghost sm" onclick="prev()">← 이전</button>
+      <button class="btn ghost sm" onclick="next()">건너뛰기 →</button>
+    </div>
+    <label class="fl" style="margin-top:2px">출제 범위</label>
+    <div class="row">
+      <button class="btn ghost sm" style="${filter==='all'?'border-color:var(--navy);color:var(--navy)':''}" onclick="setFilter('all')">전체 ${QS.length}</button>
+      <button class="btn ghost sm" style="${filter==='wrong'?'border-color:var(--navy);color:var(--navy)':''}" onclick="setFilter('wrong')">틀린 것 ${QS.filter(q=>q.stats.last==='x').length}</button>
+      <button class="btn ghost sm" style="${filter==='unseen'?'border-color:var(--navy);color:var(--navy)':''}" onclick="setFilter('unseen')">안 푼 것 ${QS.filter(q=>!q.stats.seen).length}</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn ghost sm" style="width:100%;${shuffle?'border-color:var(--navy);color:var(--navy)':''}" onclick="toggleShuffle()">
+        ${shuffle?'순서 섞기 켜짐':'순서 섞기 꺼짐'}</button>
+    </div>
+  </div>`;
+}
+
+function emptyBank(){
+  return `<div class="card empty">
+    <p>아직 문제가 없습니다.<br>문제관리 탭에서 먼저 등록해 주세요.</p>
+    <button class="btn" style="max-width:220px;margin:0 auto" onclick="go('bank')">문제 등록하러 가기</button>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. 렌더 — 문제관리
+   ══════════════════════════════════════════════════════════ */
+function viewBank(){
+  const list = QS.slice().reverse().map(q => `
+    <div class="qitem">
+      <span class="tag" style="flex:none">${TYPE_LABEL[q.type]}</span>
+      <div class="txt">
+        <div class="q">${esc(q.body)}</div>
+        <div class="a">답: ${esc(q.answer) || '—'} · ${esc(q.category)}</div>
+      </div>
+      <button class="del" title="삭제" onclick="del('${q.id}')">×</button>
+    </div>`).join('') || '<p class="muted">등록된 문제가 없습니다.</p>';
+
+  return `
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 4px">붙여넣기로 한 번에 등록</h2>
+    <p class="muted">문제 사이를 <code>---</code> 로 구분하면 여러 개를 한꺼번에 넣을 수 있습니다.</p>
+    <textarea id="bulk" style="min-height:150px;margin-top:10px" placeholder="여기에 붙여넣으세요"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="doBulk()">등록</button>
+      <button class="btn ghost" onclick="fillSample()">예시 넣어보기</button>
+    </div>
+    <details>
+      <summary>붙여넣기 형식 보기</summary>
+      <pre>[데이터베이스] 정규화 과정에서 부분 함수 종속을
+제거하는 단계는?
+답: 제2정규형(2NF)
+해설: 1NF → 2NF 에서 부분 함수 종속을 제거한다.
+---
+[프로그래밍] 다음 코드의 출력값은?
+\`\`\`
+int a = 5;
+System.out.println(a++ + ++a);
+\`\`\`
+답: 12
+---
+[네트워크] OSI 7계층 중 라우팅을 담당하는 계층은?
+1) 데이터링크 계층
+2) 네트워크 계층
+3) 전송 계층
+4) 세션 계층
+답: 2</pre>
+      <p class="muted" style="margin-top:10px">
+        · <code>[대괄호]</code> 는 분류, <code>답:</code> <code>해설:</code> 로 시작하는 줄은 각각 정답과 해설입니다.<br>
+        · <code>1)</code> <code>2)</code> 로 시작하는 줄이 2개 이상이면 객관식으로 인식합니다.<br>
+        · <code>&#96;&#96;&#96;</code> 로 감싸면 코드 블록으로 표시됩니다.
+      </p>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 4px">한 문제씩 직접 입력</h2>
+    <label class="fl" for="f-body">문제</label>
+    <textarea id="f-body" style="min-height:70px"></textarea>
+    <label class="fl" for="f-code">코드 (없으면 비워두세요)</label>
+    <textarea id="f-code" class="mono" style="min-height:56px;font-size:13px"></textarea>
+    <label class="fl" for="f-choices">보기 (한 줄에 하나, 객관식일 때만)</label>
+    <textarea id="f-choices" style="min-height:56px"></textarea>
+    <label class="fl" for="f-ans">정답</label>
+    <input type="text" id="f-ans">
+    <label class="fl" for="f-exp">해설</label>
+    <textarea id="f-exp" style="min-height:56px"></textarea>
+    <label class="fl" for="f-cat">분류</label>
+    <input type="text" id="f-cat" placeholder="예: 데이터베이스">
+    <div style="margin-top:12px"><button class="btn" onclick="addOne()">문제 추가</button></div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 10px">백업</h2>
+    <p class="muted">문제는 이 기기 안에만 저장됩니다. 가끔 파일로 내려받아 두세요.</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn ghost sm" onclick="downloadJSON()">파일로 저장</button>
+      <button class="btn ghost sm" onclick="document.getElementById('fileup').click()">파일 불러오기</button>
+    </div>
+    <input type="file" id="fileup" accept=".json,application/json" class="hide" onchange="loadFile(this)">
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost sm" onclick="exportJSON()">JSON 복사</button>
+      <button class="btn ghost sm" onclick="resetStats()">기록 초기화</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 6px">등록된 문제 ${QS.length}개</h2>
+    ${list}
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. 렌더 — 통계
+   ══════════════════════════════════════════════════════════ */
+function viewStats(){
+  if(!QS.length) return emptyBank();
+  const solved = QS.filter(q=>q.stats.seen).length;
+  const tot = QS.reduce((a,q)=>a+(q.stats.correct||0)+(q.stats.wrong||0),0);
+  const ok  = QS.reduce((a,q)=>a+(q.stats.correct||0),0);
+  const rate = tot ? Math.round(ok/tot*100) : 0;
+
+  const byCat = {};
+  QS.forEach(q=>{
+    const c = q.category || '미분류';
+    byCat[c] = byCat[c] || {n:0, o:0, t:0};
+    byCat[c].n++; byCat[c].o += q.stats.correct||0; byCat[c].t += (q.stats.correct||0)+(q.stats.wrong||0);
+  });
+  const rows = Object.entries(byCat)
+    .sort((a,b)=>(a[1].t?a[1].o/a[1].t:2)-(b[1].t?b[1].o/b[1].t:2))
+    .map(([c,v])=>`<tr><td>${esc(c)}</td><td class="n">${v.n}</td>
+      <td class="n" style="color:${v.t? (v.o/v.t<0.6?'var(--red)':'var(--teal)') :'var(--ink-3)'}">
+      ${v.t ? Math.round(v.o/v.t*100)+'%' : '—'}</td></tr>`).join('');
+
+  const weak = QS.filter(q=>q.stats.last==='x')
+    .map(q=>`<div class="qitem"><span class="tag" style="flex:none;border-color:var(--red);color:var(--red)">틀림</span>
+      <div class="txt"><div class="q">${esc(q.body)}</div>
+      <div class="a">답: ${esc(q.answer)||'—'}</div></div></div>`).join('')
+    || '<p class="muted">마지막 회독에서 틀린 문제가 없습니다.</p>';
+
+  return `
+  <div class="card">
+    <div class="bigstat">
+      <div><b>${QS.length}</b><small>등록 문제</small></div>
+      <div><b>${solved}</b><small>한 번 이상 품</small></div>
+      <div><b style="color:${rate<60?'var(--red)':'var(--teal)'}">${rate}%</b><small>누적 정답률</small></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 8px">약한 분류부터</h2>
+    <table><tr><th>분류</th><th class="n">문제</th><th class="n">정답률</th></tr>${rows}</table>
+  </div>
+  <div class="card">
+    <h2 style="font-size:15px;margin:0 0 6px">다시 볼 문제</h2>
+    ${weak}
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. 동작
+   ══════════════════════════════════════════════════════════ */
+function render(){
+  const v = document.getElementById('view');
+  v.innerHTML = tab==='quiz' ? viewQuiz() : tab==='bank' ? viewBank() : viewStats();
+  document.querySelectorAll('#nav button').forEach(b =>
+    b.setAttribute('aria-selected', b.dataset.tab===tab));
+  const el = document.getElementById('myans');
+  if(el && !revealed) el.focus({preventScroll:true});
+}
+function go(t){ tab=t; window.__typed=''; render(); window.scrollTo(0,0); }
+function goto(i){ pos=i; revealed=false; picked=null; window.__typed=''; render(); }
+function prev(){ if(pos>0) pos--; revealed=false; picked=null; window.__typed=''; render(); }
+function pick(i){ picked=i; render(); }
+
+function reveal(){
+  const el = document.getElementById('myans');
+  if(el) window.__typed = el.value;
+  revealed = true;
+  render();
+}
+function mark(ok){
+  const q = curQ(); if(!q) return;
+  // 객관식은 선택이 있으면 자동 판정을 우선하되, 사용자의 최종 선택을 존중
+  window.__typed = '';
+  grade(q, ok);
+}
+function setFilter(f){ filter=f; resetOrder(); window.__typed=''; if(tab!=='quiz') tab='quiz'; render(); }
+function toggleShuffle(){ shuffle=!shuffle; resetOrder(); render(); }
+
+function doBulk(){
+  const ta = document.getElementById('bulk');
+  const parsed = parseBulk(ta.value);
+  if(!parsed.length){ toast('읽어낼 문제가 없습니다'); return; }
+  QS = QS.concat(parsed);
+  parsed.forEach(saveQ);
+  ta.value = '';
+  resetOrder(); render();
+  toast(parsed.length + '문제 등록');
+}
+function addOne(){
+  const g = id => (document.getElementById(id)||{}).value || '';
+  const body = g('f-body').trim();
+  if(!body){ toast('문제 내용을 적어주세요'); return; }
+  const choices = g('f-choices').split('\n').map(s=>s.trim()).filter(Boolean);
+  const code = g('f-code').trim();
+  const q = mkQ({
+    type: choices.length>=2 ? 'choice' : (code ? 'code' : 'short'),
+    body, code, choices,
+    answer: g('f-ans').trim(), explain: g('f-exp').trim(),
+    category: g('f-cat').trim() || '미분류'
+  });
+  QS.push(q); saveQ(q);
+  ['f-body','f-code','f-choices','f-ans','f-exp'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.value='';
+  });
+  resetOrder(true); render();
+  toast('추가했습니다');
+}
+function del(id){ removeQ(id); resetOrder(true); render(); }
+
+function resetStats(){
+  QS.forEach(q => { q.stats = {seen:0,correct:0,wrong:0,last:null}; saveQ(q); });
+  resetOrder(); render(); toast('회독 기록을 지웠습니다');
+}
+function exportJSON(){
+  const txt = JSON.stringify(QS, null, 1);
+  navigator.clipboard?.writeText(txt).then(
+    ()=>toast('클립보드에 복사했습니다'),
+    ()=>{ const t=document.getElementById('bulk'); if(t){t.value=txt; toast('위 칸에 넣었습니다');} }
+  );
+}
+function importJSON(){
+  const ta = document.getElementById('bulk');
+  if(!ta || !ta.value.trim()){ toast('위 붙여넣기 칸에 JSON을 넣고 눌러주세요'); return; }
+  try{
+    const arr = JSON.parse(ta.value);
+    if(!Array.isArray(arr)) throw 0;
+    const add = arr.map(o => Object.assign(mkQ(o), {id:o.id||uid(), stats:o.stats||{seen:0,correct:0,wrong:0,last:null}}));
+    QS = QS.concat(add); add.forEach(saveQ);
+    ta.value=''; resetOrder(); render(); toast(add.length+'문제 불러옴');
+  }catch(e){ toast('JSON 형식이 아닙니다'); }
+}
+function fillSample(){
+  document.getElementById('bulk').value =
+`[데이터베이스] 정규화 과정에서 부분 함수 종속을 제거하는 단계는?
+답: 제2정규형(2NF)
+해설: 1NF에서 부분 함수 종속을 제거하면 2NF가 된다.
+---
+[프로그래밍] 다음 Java 코드의 출력값을 쓰시오.
+\`\`\`
+int a = 5;
+System.out.println(a++ + ++a);
+\`\`\`
+답: 12
+해설: a++는 5를 쓰고 6이 되고, ++a는 7이 되어 5+7=12.
+---
+[네트워크] OSI 7계층 중 라우팅과 논리 주소 지정을 담당하는 계층은?
+1) 데이터링크 계층
+2) 네트워크 계층
+3) 전송 계층
+4) 세션 계층
+답: 2
+해설: 네트워크 계층이 IP 주소와 라우팅을 담당한다.`;
+  toast('예시를 넣었습니다. 등록을 눌러보세요');
+}
+
+let toastT;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'), 1800);
+}
+
+/* 테마 토글 */
+document.getElementById('themebtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = cur ? cur==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  try{ localStorage.setItem('gisa-theme', dark?'light':'dark'); }catch(e){}
+};
+try{ const t = localStorage.getItem('gisa-theme'); if(t) document.documentElement.setAttribute('data-theme', t); }catch(e){}
+
+document.getElementById('nav').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if(b) go(b.dataset.tab);
+});
+
+/* ── 시작 ── */
+window.__typed = '';
+QS = localLoad();
+resetOrder();
+render();
+connectDB();
+
+/* ── 파일로 백업 / 복원 ── */
+function downloadJSON(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  const name = `기사실기_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.json`;
+  const blob = new Blob([JSON.stringify(QS, null, 1)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('내려받았습니다');
+}
+function loadFile(input){
+  const f = input.files && input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw 0;
+      const add = arr.map(o => Object.assign(mkQ(o), {
+        id: o.id || uid(),
+        stats: o.stats || {seen:0,correct:0,wrong:0,last:null}
+      }));
+      const have = new Set(QS.map(q=>q.id));
+      const fresh = add.filter(q=>!have.has(q.id));      // 같은 문제 중복 방지
+      QS = QS.concat(fresh); fresh.forEach(saveQ);
+      resetOrder(); render();
+      toast(fresh.length ? fresh.length+'문제 불러옴' : '새로 추가된 문제 없음');
+    }catch(e){ toast('JSON 파일이 아닙니다'); }
+  };
+  r.readAsText(f); input.value = '';
+}
+
+/* ── 서비스워커 등록 (오프라인 실행) ── */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
