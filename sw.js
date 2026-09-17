@@ -1,7 +1,7 @@
 /* 정보처리기사 실기 문제은행 — 서비스워커
    앱 파일을 캐시에 저장해 두고, 오프라인에서는 캐시로 응답한다.
    앱을 수정하면 아래 VERSION 숫자를 올려야 갱신된다. */
-const VERSION = 'gisa-v2';
+const VERSION = 'gisa-v3';
 const SHELL = [
   './', './index.html', './manifest.json',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'
